@@ -327,9 +327,16 @@ type decodingState struct {
 	duration           float64
 	title              string
 	variant            *Variant
-	alternatives       []*Alternative
+	groups             map[string][]*Alternative
 	xkey               *Key
 	xmap               *Map
 	scte               *SCTE
 	custom             map[string]CustomTag
+}
+
+func newDecodingState() *decodingState {
+	state := new(decodingState)
+	state.groups = make(map[string][]*Alternative)
+	state.custom = make(map[string]CustomTag)
+	return state
 }

@@ -64,7 +64,7 @@ func (p *MasterPlaylist) WithCustomDecoders(customDecoders []CustomDecoder) Play
 func (p *MasterPlaylist) decode(buf *bytes.Buffer, strict bool) error {
 	var eof bool
 
-	state := new(decodingState)
+	state := newDecodingState()
 
 	for !eof {
 		line, err := buf.ReadString('\n')
@@ -80,6 +80,36 @@ func (p *MasterPlaylist) decode(buf *bytes.Buffer, strict bool) error {
 	}
 	if strict && !state.m3u {
 		return errors.New("#EXTM3U absent")
+	}
+	for _, v := range p.Variants {
+		if v.Video != "" {
+			if alt, ok := state.groups[v.Video]; ok {
+				v.Alternatives = append(v.Alternatives, alt...)
+			} else {
+				return errors.New("GRPOUP-ID undefined")
+			}
+		}
+		if v.Audio != "" {
+			if alt, ok := state.groups[v.Audio]; ok {
+				v.Alternatives = append(v.Alternatives, alt...)
+			} else {
+				return errors.New("GRPOUP-ID undefined")
+			}
+		}
+		if v.Subtitles != "" {
+			if alt, ok := state.groups[v.Subtitles]; ok {
+				v.Alternatives = append(v.Alternatives, alt...)
+			} else {
+				return errors.New("GROUP-ID undefined")
+			}
+		}
+		if v.Captions != "" && v.Captions != "NONE" {
+			if alt, ok := state.groups[v.Captions]; ok {
+				v.Alternatives = append(v.Alternatives, alt...)
+			} else {
+				return errors.New("GROUP-ID undefined")
+			}
+		}
 	}
 	return nil
 }
@@ -119,7 +149,7 @@ func (p *MediaPlaylist) decode(buf *bytes.Buffer, strict bool) error {
 	var line string
 	var err error
 
-	state := new(decodingState)
+	state := newDecodingState()
 	wv := new(WV)
 
 	for !eof {
@@ -189,7 +219,7 @@ func decode(buf *bytes.Buffer, strict bool, customDecoders []CustomDecoder) (Pla
 	var listType ListType
 	var err error
 
-	state := new(decodingState)
+	state := newDecodingState()
 	wv := new(WV)
 
 	master = NewMasterPlaylist()
@@ -202,7 +232,6 @@ func decode(buf *bytes.Buffer, strict bool, customDecoders []CustomDecoder) (Pla
 	if customDecoders != nil {
 		media = media.WithCustomDecoders(customDecoders).(*MediaPlaylist)
 		master = master.WithCustomDecoders(customDecoders).(*MasterPlaylist)
-		state.custom = make(map[string]CustomTag)
 	}
 
 	for !eof {
@@ -331,15 +360,11 @@ func decodeLineOfMasterPlaylist(p *MasterPlaylist, state *decodingState, line st
 				alt.URI = v
 			}
 		}
-		state.alternatives = append(state.alternatives, &alt)
+		state.groups[alt.GroupId] = append(state.groups[alt.GroupId], &alt)
 	case !state.tagStreamInf && strings.HasPrefix(line, "#EXT-X-STREAM-INF:"):
 		state.tagStreamInf = true
 		state.listType = MASTER
 		state.variant = new(Variant)
-		if len(state.alternatives) > 0 {
-			state.variant.Alternatives = state.alternatives
-			state.alternatives = nil
-		}
 		p.Variants = append(p.Variants, state.variant)
 		for k, v := range decodeParamsLine(line[18:]) {
 			switch k {
@@ -395,10 +420,6 @@ func decodeLineOfMasterPlaylist(p *MasterPlaylist, state *decodingState, line st
 		state.listType = MASTER
 		state.variant = new(Variant)
 		state.variant.Iframe = true
-		if len(state.alternatives) > 0 {
-			state.variant.Alternatives = state.alternatives
-			state.alternatives = nil
-		}
 		p.Variants = append(p.Variants, state.variant)
 		for k, v := range decodeParamsLine(line[26:]) {
 			switch k {
