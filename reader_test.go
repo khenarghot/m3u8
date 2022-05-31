@@ -169,9 +169,9 @@ func TestDecodeMasterPlaylistWithIFrameStreamInf(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := map[int]*Variant{
-		86000:  {URI: "low/iframe.m3u8", VariantParams: VariantParams{Bandwidth: 86000, ProgramId: 1, Codecs: "c1", Resolution: "1x1", Video: "1", Iframe: true}},
-		150000: {URI: "mid/iframe.m3u8", VariantParams: VariantParams{Bandwidth: 150000, ProgramId: 1, Codecs: "c2", Resolution: "2x2", Video: "2", Iframe: true}},
-		550000: {URI: "hi/iframe.m3u8", VariantParams: VariantParams{Bandwidth: 550000, ProgramId: 1, Codecs: "c2", Resolution: "2x2", Video: "2", Iframe: true}},
+		86000:  {URI: "low/iframe.m3u8", VariantParams: VariantParams{Bandwidth: 86000, ProgramId: 1, Codecs: "c1", Resolution: "1x1", Iframe: true}},
+		150000: {URI: "mid/iframe.m3u8", VariantParams: VariantParams{Bandwidth: 150000, ProgramId: 1, Codecs: "c2", Resolution: "2x2", Iframe: true}},
+		550000: {URI: "hi/iframe.m3u8", VariantParams: VariantParams{Bandwidth: 550000, ProgramId: 1, Codecs: "c2", Resolution: "2x2", Iframe: true}},
 	}
 	for _, variant := range p.Variants {
 		for k, expect := range expected {
