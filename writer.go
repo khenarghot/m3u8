@@ -145,9 +145,14 @@ func (p *MasterPlaylist) Encode() *bytes.Buffer {
 					p.buf.WriteString(alt.Characteristics)
 					p.buf.WriteRune('"')
 				}
-				if alt.Subtitles != "" {
-					p.buf.WriteString(",SUBTITLES=\"")
-					p.buf.WriteString(alt.Subtitles)
+				if alt.Channels != "" {
+					p.buf.WriteString(",CHANNELS=\"")
+					p.buf.WriteString(alt.Channels)
+					p.buf.WriteRune('"')
+				}
+				if alt.InstreamId != "" {
+					p.buf.WriteString(",INSTREAM-ID=\"")
+					p.buf.WriteString(alt.Channels)
 					p.buf.WriteRune('"')
 				}
 				if alt.URI != "" {

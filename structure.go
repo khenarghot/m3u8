@@ -187,16 +187,18 @@ type VariantParams struct {
 
 // Alternative structure represents EXT-X-MEDIA tag in variants.
 type Alternative struct {
-	GroupId         string
-	URI             string
-	Type            string
-	Language        string
+	Type     string
+	URI      string
+	GroupId  string
+	Language string
+	// ASSOC-LANGUAGE skiped
 	Name            string
 	Default         bool
 	Autoselect      string
 	Forced          string
+	InstreamId      string
 	Characteristics string
-	Subtitles       string
+	Channels        string
 }
 
 // MediaSegment structure represents a media segment included in a
