@@ -234,6 +234,216 @@ func TestDecodeMasterPlaylistWithIndependentSegments(t *testing.T) {
 	}
 }
 
+func matchAlternatiives(a []*Alternative, b []*Alternative) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	mb := make(map[int]struct{})
+	for n, v := range a {
+		for _, w := range b {
+			if reflect.DeepEqual(v, w) {
+				mb[n] = struct{}{}
+				break
+			}
+		}
+	}
+	if len(mb) != len(a) {
+		return false
+	}
+	mb = make(map[int]struct{})
+	for n, w := range b {
+		for _, v := range a {
+			if reflect.DeepEqual(v, w) {
+				mb[n] = struct{}{}
+				break
+			}
+		}
+	}
+	return len(mb) == len(b)
+}
+
+func matchVariants(a *Variant, b *Variant) bool {
+	aAlternatives, bAlternatives := a.Alternatives, b.Alternatives
+	a.Alternatives, b.Alternatives = nil, nil
+	defer func() {
+		a.Alternatives, b.Alternatives = aAlternatives, bAlternatives
+	}()
+
+	if !reflect.DeepEqual(a, b) {
+		return false
+	}
+	return matchAlternatiives(aAlternatives, bAlternatives)
+}
+
+func TestMatchFunctions(t *testing.T) {
+	var alt1 = []*Alternative{
+		{GroupId: "aud1", URI: "a1/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "2"},
+		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+	}
+	var alt11 = []*Alternative{
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+		{GroupId: "aud1", URI: "a1/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "2"},
+		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
+	}
+	var alt2 = []*Alternative{
+		{GroupId: "aud2", URI: "a2/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "6"},
+		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+	}
+	var alt22 = []*Alternative{
+		{GroupId: "aud2", URI: "a2/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "6"},
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+	}
+	if !matchAlternatiives(alt1, alt11) {
+		t.Errorf("Not matching same alternatives with different order")
+	}
+	if matchAlternatiives(alt1, alt2) {
+		t.Errorf("Different alternatives match")
+	}
+	if matchAlternatiives(alt22, alt2) {
+		t.Errorf("Different alternatives match")
+	}
+
+	v1 := &Variant{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2227464, AverageBandwidth: 2218327, Codecs: "avc1.640020,mp4a.40.2", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}}
+	v11 := &Variant{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2227464, AverageBandwidth: 2218327, Codecs: "avc1.640020,mp4a.40.2", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt11}}
+	if !matchVariants(v1, v11) {
+		t.Errorf("Same variants does not match")
+	}
+	v2 := &Variant{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2227464, AverageBandwidth: 2218327, Codecs: "avc1.640020,mp4a.40.2", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt2}}
+	if matchVariants(v1, v2) {
+		t.Errorf("Variants with different alternatives match")
+	}
+	v21 := &Variant{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2227464, AverageBandwidth: 2218327, Codecs: "avc1.64001e,mp4a.40.2", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt2}}
+	if matchVariants(v21, v2) {
+		t.Errorf("Variants with different codecs match")
+	}
+
+	f, err := os.Open("sample-playlists/master-apple-with-custom-tags.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := NewMasterPlaylist()
+	err = p.DecodeFrom(bufio.NewReader(f), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v1r := p.Variants[0]
+	if !reflect.DeepEqual(v1r.Alternatives[0], v1.Alternatives[0]) {
+		t.Errorf("Same alternatives does not much %v %v",
+			v1r.Alternatives[0], v1.Alternatives[0])
+	}
+	if !reflect.DeepEqual(v1r.Alternatives[1], v1.Alternatives[1]) {
+		t.Errorf("Same alternatives does not much %v %v",
+			v1r.Alternatives[1], v1.Alternatives[1])
+	}
+	if !reflect.DeepEqual(v1r.Alternatives[2], v1.Alternatives[2]) {
+		t.Errorf("Same alternatives does not much %v %v",
+			v1r.Alternatives[2], v1.Alternatives[2])
+	}
+
+	if !matchAlternatiives(v1r.Alternatives, v1.Alternatives) {
+		t.Errorf("Same alternatives mismatch %v | %v", v1r.Alternatives[1], v1.Alternatives[1])
+	}
+
+	if !matchVariants(v1, v1r) {
+		t.Errorf("Same variants does not match with file %v %v", v1, p.Variants[0])
+	}
+
+}
+
+func TestDecodeApppleMasterWithAlternatives(t *testing.T) {
+	f, err := os.Open("sample-playlists/master-apple-with-custom-tags.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := NewMasterPlaylist()
+	err = p.DecodeFrom(bufio.NewReader(f), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var alt1 = []*Alternative{
+		{GroupId: "aud1", URI: "a1/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "2"},
+		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
+		{GroupId: "cc1", Type: "CLOSED-CAPTION", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+	}
+	var alt2 = []*Alternative{
+		{GroupId: "aud2", URI: "a2/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "6"},
+		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
+		{GroupId: "cc1", Type: "CLOSED-CAPTION", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+	}
+	var alt3 = []*Alternative{
+		{GroupId: "aud3", URI: "a3/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "6"},
+		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
+		{GroupId: "cc1", Type: "CLOSED-CAPTION", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+	}
+
+	expected := []*Variant{
+		{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2227464, AverageBandwidth: 2218327, Codecs: "avc1.640020,mp4a.40.2", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v9/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 8178040, AverageBandwidth: 8144656, Codecs: "avc1.64002a,mp4a.40.2", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v8/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 6453202, AverageBandwidth: 6307144, Codecs: "avc1.64002a,mp4a.40.2", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v7/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 5054232, AverageBandwidth: 4775338, Codecs: "avc1.64002a,mp4a.40.2", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v6/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 3289288, AverageBandwidth: 3240596, Codecs: "avc1.640020,mp4a.40.2", Resolution: "1280x720", FrameRate: 60, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v4/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 1296989, AverageBandwidth: 1292926, Codecs: "avc1.64001e,mp4a.40.2", Resolution: "768x432", FrameRate: 30, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v3/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 922242, AverageBandwidth: 914722, Codecs: "avc1.64001e,mp4a.40.2", Resolution: "640x360", FrameRate: 30, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		{URI: "v2/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 553010, AverageBandwidth: 541239, Codecs: "avc1.640015,mp4a.40.2", Resolution: "480x270", FrameRate: 30, Captions: "cc1", Audio: "aud1", Subtitles: "sub1", Alternatives: alt1}},
+		// Same with other sound representation (ac-3)
+		{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2448841, AverageBandwidth: 2439704, Codecs: "avc1.640020,ac-3", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v9/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 8399417, AverageBandwidth: 8366033, Codecs: "avc1.64002a,ac-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v8/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 6674579, AverageBandwidth: 6528521, Codecs: "avc1.64002a,ac-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v7/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 5275609, AverageBandwidth: 4996715, Codecs: "avc1.64002a,ac-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v6/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 3510665, AverageBandwidth: 3461973, Codecs: "avc1.640020,ac-3", Resolution: "1280x720", FrameRate: 60, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v4/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 1518366, AverageBandwidth: 1514303, Codecs: "avc1.64001e,ac-3", Resolution: "768x432", FrameRate: 30, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v3/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 1143619, AverageBandwidth: 1136099, Codecs: "avc1.64001e,ac-3", Resolution: "640x360", FrameRate: 30, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		{URI: "v2/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 774387, AverageBandwidth: 762616, Codecs: "avc1.640015,ac-3", Resolution: "480x270", FrameRate: 30, Captions: "cc1", Audio: "aud2", Subtitles: "sub1", Alternatives: alt2}},
+		// Same with other sound representation (ec-3)
+		{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2256841, AverageBandwidth: 2247704, Codecs: "avc1.640020,ec-3", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v9/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 8207417, AverageBandwidth: 8174033, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v8/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 6482579, AverageBandwidth: 6336521, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v7/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 5083609, AverageBandwidth: 6528521, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v6/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 3318665, AverageBandwidth: 3269973, Codecs: "avc1.640020,ec-3", Resolution: "1280x720", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v4/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 1326366, AverageBandwidth: 1322303, Codecs: "avc1.64001e,ec-3", Resolution: "768x432", FrameRate: 30, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v3/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 951619, AverageBandwidth: 944099, Codecs: "avc1.64001e,ec-3", Resolution: "640x360", FrameRate: 30, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v2/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 582387, AverageBandwidth: 570616, Codecs: "avc1.640015,ec-3", Resolution: "480x270", FrameRate: 30, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		// Iframes
+		{URI: "v7/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 570616, AverageBandwidth: 182077, Codecs: "avc1.64002a", Resolution: "1920x1080"}},
+		{URI: "v6/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 133856, AverageBandwidth: 129936, Codecs: "avc1.640020", Resolution: "1280x720"}},
+		{URI: "v5/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 98136, AverageBandwidth: 94286, Codecs: "avc1.640020", Resolution: "960x540"}},
+		{URI: "v4/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 76704, AverageBandwidth: 74767, Codecs: "avc1.64001e", Resolution: "768x432"}},
+		{URI: "v3/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 64078, AverageBandwidth: 62251, Codecs: "avc1.64001e", Resolution: "640x360"}},
+		{URI: "v2/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 38728, AverageBandwidth: 37866, Codecs: "avc1.640015", Resolution: "480x270"}},
+	}
+
+	var unexpected []*Variant
+	var missing []*Variant
+
+expected_loop:
+	for _, v := range expected {
+		for _, w := range p.Variants {
+			if reflect.DeepEqual(v, w) {
+				continue expected_loop
+			}
+		}
+		missing = append(missing, v)
+	}
+unexpected_loop:
+	for _, w := range p.Variants {
+		for _, v := range expected {
+			if reflect.DeepEqual(v, w) {
+				continue unexpected_loop
+			}
+		}
+		unexpected = append(unexpected, w)
+	}
+
+	for _, expect := range missing {
+		t.Errorf("not found: %+v", expect)
+	}
+	for _, unexpect := range unexpected {
+		t.Errorf("found but not expecting:%+v", unexpect)
+	}
+}
+
 func TestDecodeMasterWithHLSV7(t *testing.T) {
 	f, err := os.Open("sample-playlists/master-with-hlsv7.m3u8")
 	if err != nil {
