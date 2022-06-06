@@ -365,17 +365,17 @@ func TestDecodeApppleMasterWithAlternatives(t *testing.T) {
 	var alt1 = []*Alternative{
 		{GroupId: "aud1", URI: "a1/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "2"},
 		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
-		{GroupId: "cc1", Type: "CLOSED-CAPTION", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
 	}
 	var alt2 = []*Alternative{
 		{GroupId: "aud2", URI: "a2/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "6"},
 		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
-		{GroupId: "cc1", Type: "CLOSED-CAPTION", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
 	}
 	var alt3 = []*Alternative{
 		{GroupId: "aud3", URI: "a3/prog_index.m3u8", Type: "AUDIO", Language: "en", Name: "English", Autoselect: "YES", Default: true, Channels: "6"},
 		{GroupId: "sub1", URI: "s1/en/prog_index.m3u8", Type: "SUBTITLES", Language: "en", Name: "English", Autoselect: "YES", Forced: "NO", Default: true},
-		{GroupId: "cc1", Type: "CLOSED-CAPTION", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
+		{GroupId: "cc1", Type: "CLOSED-CAPTIONS", Language: "en", Name: "English", Autoselect: "YES", Default: true, InstreamId: "CC1"},
 	}
 
 	expected := []*Variant{
@@ -400,13 +400,13 @@ func TestDecodeApppleMasterWithAlternatives(t *testing.T) {
 		{URI: "v5/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 2256841, AverageBandwidth: 2247704, Codecs: "avc1.640020,ec-3", Resolution: "960x540", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		{URI: "v9/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 8207417, AverageBandwidth: 8174033, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		{URI: "v8/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 6482579, AverageBandwidth: 6336521, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
-		{URI: "v7/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 5083609, AverageBandwidth: 6528521, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
+		{URI: "v7/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 5083609, AverageBandwidth: 4804715, Codecs: "avc1.64002a,ec-3", Resolution: "1920x1080", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		{URI: "v6/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 3318665, AverageBandwidth: 3269973, Codecs: "avc1.640020,ec-3", Resolution: "1280x720", FrameRate: 60, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		{URI: "v4/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 1326366, AverageBandwidth: 1322303, Codecs: "avc1.64001e,ec-3", Resolution: "768x432", FrameRate: 30, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		{URI: "v3/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 951619, AverageBandwidth: 944099, Codecs: "avc1.64001e,ec-3", Resolution: "640x360", FrameRate: 30, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		{URI: "v2/prog_index.m3u8", VariantParams: VariantParams{Bandwidth: 582387, AverageBandwidth: 570616, Codecs: "avc1.640015,ec-3", Resolution: "480x270", FrameRate: 30, Captions: "cc1", Audio: "aud3", Subtitles: "sub1", Alternatives: alt3}},
 		// Iframes
-		{URI: "v7/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 570616, AverageBandwidth: 182077, Codecs: "avc1.64002a", Resolution: "1920x1080"}},
+		{URI: "v7/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 186522, AverageBandwidth: 182077, Codecs: "avc1.64002a", Resolution: "1920x1080"}},
 		{URI: "v6/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 133856, AverageBandwidth: 129936, Codecs: "avc1.640020", Resolution: "1280x720"}},
 		{URI: "v5/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 98136, AverageBandwidth: 94286, Codecs: "avc1.640020", Resolution: "960x540"}},
 		{URI: "v4/iframe_index.m3u8", VariantParams: VariantParams{Iframe: true, Bandwidth: 76704, AverageBandwidth: 74767, Codecs: "avc1.64001e", Resolution: "768x432"}},
