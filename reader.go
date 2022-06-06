@@ -60,27 +60,8 @@ func (p *MasterPlaylist) WithCustomDecoders(customDecoders []CustomDecoder) Play
 	return p
 }
 
-// Parse master playlist. Internal function.
-func (p *MasterPlaylist) decode(buf *bytes.Buffer, strict bool) error {
-	var eof bool
-
-	state := newDecodingState()
-
-	for !eof {
-		line, err := buf.ReadString('\n')
-		if err == io.EOF {
-			eof = true
-		} else if err != nil {
-			break
-		}
-		err = decodeLineOfMasterPlaylist(p, state, line, strict)
-		if strict && err != nil {
-			return err
-		}
-	}
-	if strict && !state.m3u {
-		return errors.New("#EXTM3U absent")
-	}
+// restore master playlist from state
+func (p *MasterPlaylist) reassemble(state *decodingState) error {
 	for _, v := range p.Variants {
 		if v.Video != "" {
 			if alt, ok := state.groups[v.Video]; ok {
@@ -112,6 +93,31 @@ func (p *MasterPlaylist) decode(buf *bytes.Buffer, strict bool) error {
 		}
 	}
 	return nil
+}
+
+// Parse master playlist. Internal function.
+func (p *MasterPlaylist) decode(buf *bytes.Buffer, strict bool) error {
+	var eof bool
+
+	state := newDecodingState()
+
+	for !eof {
+		line, err := buf.ReadString('\n')
+		if err == io.EOF {
+			eof = true
+		} else if err != nil {
+			break
+		}
+		err = decodeLineOfMasterPlaylist(p, state, line, strict)
+		if strict && err != nil {
+			return err
+		}
+	}
+	if strict && !state.m3u {
+		return errors.New("#EXTM3U absent")
+	}
+
+	return p.reassemble(state)
 }
 
 // Decode parses a media playlist passed from the buffer. If `strict`
@@ -269,6 +275,9 @@ func decode(buf *bytes.Buffer, strict bool, customDecoders []CustomDecoder) (Pla
 
 	switch state.listType {
 	case MASTER:
+		if err := master.reassemble(state); err != nil {
+			return nil, MASTER, err
+		}
 		return master, MASTER, nil
 	case MEDIA:
 		if media.Closed || media.MediaType == EVENT {

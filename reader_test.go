@@ -442,6 +442,49 @@ unexpected_loop:
 	for _, unexpect := range unexpected {
 		t.Errorf("found but not expecting:%+v", unexpect)
 	}
+
+	// Decoding with decode
+	f, err = os.Open("sample-playlists/master-apple-with-custom-tags.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pli, tp, err := DecodeFrom(bufio.NewReader(f), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ok bool
+	if p, ok = pli.(*MasterPlaylist); !ok || tp != MASTER {
+		t.Fatal("Wrong type of playlist")
+	}
+
+	unexpected = make([]*Variant, 0)
+	missing = make([]*Variant, 0)
+
+	for _, v := range p.Variants {
+		if !v.Iframe && len(v.Alternatives) == 0 {
+			t.Errorf("Len of video alternative os zero: %v", v)
+		}
+	}
+
+expected_loop_2:
+	for _, v := range expected {
+		for _, w := range p.Variants {
+			if reflect.DeepEqual(v, w) {
+				continue expected_loop_2
+			}
+		}
+		missing = append(missing, v)
+	}
+unexpected_loop_2:
+	for _, w := range p.Variants {
+		for _, v := range expected {
+			if reflect.DeepEqual(v, w) {
+				continue unexpected_loop_2
+			}
+		}
+		unexpected = append(unexpected, w)
+	}
+
 }
 
 func TestDecodeMasterWithHLSV7(t *testing.T) {
