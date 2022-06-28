@@ -1,5 +1,5 @@
 <!--*- mode:markdown -*-->
-M3U8 [![](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go#video)
+M3U8
 ====
 
 This is the most complete opensource library for parsing and generating of M3U8 playlists
@@ -23,17 +23,16 @@ See the list of the library authors at [AUTHORS](AUTHORS) file.
 Install
 -------
 
-	go get github.com/grafov/m3u8
+	go get github.com/khenarghot/m3u8
 
-or get releases from https://github.com/grafov/m3u8/releases
+or get releases from https://github.com/khenarghot/m3u8/releases
 
-Documentation [![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/grafov/m3u8) [![GoDoc](https://godoc.org/github.com/grafov/m3u8?status.svg)](https://godoc.org/github.com/grafov/m3u8)
+Documentation  [![GoDoc](https://pkg.go.dev/badge/github.com/khenarghot/m3u8?status.svg)](https://pkg.go.dev/github.com/khenarghot/m3u8)
 -------------
 
 Package online documentation (examples included) available at:
 
-* http://gowalker.org/github.com/grafov/m3u8
-* http://godoc.org/github.com/grafov/m3u8
+* https://pkg.go.dev/github.com/khenarghot/m3u8
 
 Supported by the HLS protocol tags and their library support explained in [M3U8 cheatsheet](M3U8.md).
 
@@ -116,16 +115,13 @@ Also the library used in opensource software so you may look at these apps for u
 * [HLS utils](https://github.com/archsh/hls-utils)
 * [M3U8 reader](https://github.com/jeongmin/m3u8-reader)
 
-Project status [![Go Report Card](https://goreportcard.com/badge/grafov/m3u8)](https://goreportcard.com/report/grafov/m3u8)
---------------
 
-[![Build Status](https://travis-ci.org/grafov/m3u8.png?branch=master)](https://travis-ci.org/grafov/m3u8) [![Build Status](https://cloud.drone.io/api/badges/grafov/m3u8/status.svg)](https://cloud.drone.io/grafov/m3u8) [![Coverage Status](https://coveralls.io/repos/github/grafov/m3u8/badge.svg?branch=master)](https://coveralls.io/github/grafov/m3u8?branch=master)
+Original project
+----------------
 
-[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/grafov/m3u8/?ref=repository-badge)
+The original project is https://github.com/grafov/m3u8. This is fork with some fixes.
 
-Code coverage: https://gocover.io/github.com/grafov/m3u8
-
-Project maintainers:
+Original project maintainers:
 
 * Lei Gao @leikao
 * Bradley Falzon @bradleyfalzon
