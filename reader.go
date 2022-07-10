@@ -22,6 +22,8 @@ import (
 	"time"
 )
 
+var ErrorNoEXTM3U = errors.New("#EXTM3U absent")
+
 var reKeyValue = regexp.MustCompile(`([a-zA-Z0-9_-]+)=("[^"]+"|[^",]+)`)
 
 // TimeParse allows globally apply and/or override Time Parser function.
@@ -112,9 +114,9 @@ func (p *MasterPlaylist) decode(buf *bytes.Buffer, strict bool) error {
 		if strict && err != nil {
 			return err
 		}
-	}
-	if strict && !state.m3u {
-		return errors.New("#EXTM3U absent")
+		if strict && !state.m3u {
+			return ErrorNoEXTM3U
+		}
 	}
 
 	return p.reassemble(state)
@@ -169,13 +171,12 @@ func (p *MediaPlaylist) decode(buf *bytes.Buffer, strict bool) error {
 		if strict && err != nil {
 			return err
 		}
-
+		if strict && !state.m3u {
+			return ErrorNoEXTM3U
+		}
 	}
 	if state.tagWV {
 		p.WV = wv
-	}
-	if strict && !state.m3u {
-		return errors.New("#EXTM3U absent")
 	}
 	return nil
 }
@@ -263,14 +264,12 @@ func decode(buf *bytes.Buffer, strict bool, customDecoders []CustomDecoder) (Pla
 		if strict && err != nil {
 			return media, state.listType, err
 		}
-
+		if strict && !state.m3u {
+			return nil, listType, ErrorNoEXTM3U
+		}
 	}
 	if state.listType == MEDIA && state.tagWV {
 		media.WV = wv
-	}
-
-	if strict && !state.m3u {
-		return nil, listType, errors.New("#EXTM3U absent")
 	}
 
 	switch state.listType {

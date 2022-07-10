@@ -1088,8 +1088,17 @@ func TestDecodeMediaPlaylistWithCustomTags(t *testing.T) {
 // Example of parsing a playlist with EXT-X-DISCONTINIUTY tag
 // and output it with integer segment durations.
 func ExampleMediaPlaylist_DurationAsInt() {
-	f, _ := os.Open("sample-playlists/media-playlist-with-discontinuity.m3u8")
-	p, _, _ := DecodeFrom(bufio.NewReader(f), true)
+	f, err := os.Open("sample-playlists/media-playlist-with-discontinuity.m3u8")
+	if err != nil {
+		panic(err)
+	}
+	p, tp, err := DecodeFrom(bufio.NewReader(f), false)
+	if err != nil {
+		panic(err)
+	}
+	if tp != MEDIA {
+		panic("Not media playlist")
+	}
 	pp := p.(*MediaPlaylist)
 	pp.DurationAsInt(true)
 	fmt.Printf("%s", pp)
@@ -1223,6 +1232,58 @@ func TestDecodeMediaPlaylistStartTime(t *testing.T) {
 	if pp.StartTime != float64(8.0) {
 		t.Errorf("Media segment StartTime != 8: %f", pp.StartTime)
 	}
+}
+
+/********************
+ *  Bad data tests  *
+ ********************/
+
+// Test mallformed playlist
+func TestMalformedMasterPlaylis(t *testing.T) {
+	data := []byte("#EXT-X-START:\n#EXTM3U")
+	_, _, err := DecodeFrom(bytes.NewReader(data), true)
+	if err != nil {
+		if !errors.Is(err, ErrorNoEXTM3U) {
+			t.Errorf("Wrong error type at DecodeFrom: %s", err)
+		}
+	} else {
+		t.Error("No error on malformed playlist on DecodeFrome")
+	}
+	if _, _, err := DecodeFrom(bytes.NewReader(data), false); err != nil {
+		t.Errorf("Unexpected error on not strict mode of parsing: %s", err)
+	}
+
+	var master = new(MasterPlaylist)
+	err = master.DecodeFrom(bytes.NewReader(data), true)
+	if err != nil {
+		if !errors.Is(err, ErrorNoEXTM3U) {
+			t.Errorf("Wrong error type at (*MasterPlaylist).DecodeFrom: %s",
+				err)
+		}
+	} else {
+		t.Error("No error on malformed playlist on (*MasterPlaylist).DecodeFrome")
+	}
+
+	if err := master.DecodeFrom(bytes.NewReader(data), false); err != nil {
+		t.Errorf("Unexpected error on not strict mode of parsing: %s", err)
+	}
+
+	var media = new(MediaPlaylist)
+	err = media.DecodeFrom(bytes.NewReader(data), true)
+	if err != nil {
+		if !errors.Is(err, ErrorNoEXTM3U) {
+			t.Errorf("Wrong error type at (*MediaPlaylist).DecodeFrom: %s",
+				err)
+		}
+	} else {
+		// TODO: There is probably an error here. The
+		// tag EXT-X-START should only appear in the master playlist.
+		t.Error("No error on malformed playlist on (*MediaPlaylist).DecodeFrome")
+	}
+	if err := media.DecodeFrom(bytes.NewReader(data), false); err != nil {
+		t.Errorf("Unexpected error on not strict mode of parsing: %s", err)
+	}
+
 }
 
 /****************
