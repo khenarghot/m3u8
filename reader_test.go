@@ -1,11 +1,11 @@
 /*
- Playlist parsing tests.
+Playlist parsing tests.
 
- Copyright 2013-2019 The Project Developers.
- See the AUTHORS and LICENSE files at the top-level directory of this distribution
- and at https://github.com/grafov/m3u8/
+Copyright 2013-2019 The Project Developers.
+See the AUTHORS and LICENSE files at the top-level directory of this distribution
+and at https://github.com/grafov/m3u8/
 
- ॐ तारे तुत्तारे तुरे स्व
+ॐ तारे तुत्तारे तुरे स्व
 */
 package m3u8
 
@@ -1284,6 +1284,25 @@ func TestMalformedMasterPlaylis(t *testing.T) {
 		t.Errorf("Unexpected error on not strict mode of parsing: %s", err)
 	}
 
+}
+
+func TestDecodeMediaPlaylistDicontinuityAtBegin(t *testing.T) {
+	f, err := os.Open("sample-playlists/media-with-discontinuity-at-start.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, listType, err := DecodeFrom(bufio.NewReader(f), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pp := p.(*MediaPlaylist)
+	CheckType(t, pp)
+	if listType != MEDIA {
+		t.Error("Sample not recognized as media playlist.")
+	}
+	if pp.StartTime != float64(0.0) {
+		t.Errorf("Media segment StartTime != 0: %f", pp.StartTime)
+	}
 }
 
 /****************
