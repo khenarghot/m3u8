@@ -309,6 +309,10 @@ func decodeLineOfMasterPlaylist(p *MasterPlaylist, state *decodingState, line st
 
 	line = strings.TrimSpace(line)
 
+	if line == "" {
+		return nil
+	}
+
 	// check for custom tags first to allow custom parsing of existing tags
 	if p.Custom != nil {
 		for _, v := range p.customDecoders {
@@ -481,6 +485,10 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 	var err error
 
 	line = strings.TrimSpace(line)
+
+	if line == "" {
+		return nil
+	}
 
 	// check for custom tags first to allow custom parsing of existing tags
 	if p.Custom != nil {
