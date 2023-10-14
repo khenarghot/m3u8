@@ -1307,6 +1307,15 @@ func TestDecodeMediaPlaylistDicontinuityAtBegin(t *testing.T) {
 	}
 }
 
+// Test for https://github.com/khenarghot/m3u8/issues/3
+func TestMellformedPanicIssue3(t *testing.T) {
+	bad := bytes.NewBuffer([]byte(`#WV-CYPHER-VERSION`))
+	_, _, err := DecodeFrom(bad, true)
+	if err == nil {
+		t.Fail()
+	}
+}
+
 /****************
  *  Benchmarks  *
  ****************/
