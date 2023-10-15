@@ -1,0 +1,36 @@
+name: Build and Check
+on: [push, pull_request]
+jobs:
+  build_and_check:
+    name: Build and check (ubuntu latest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: Build
+        run: go build -v
+      - name: Check
+        run: go test
+  fuzz:
+    needs: [build_and_check]
+    name: Fuzz
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: Build
+        run: go build -v
+      - name: Fuzz
+        run: go test -fuzz FuzzDecode -fuzztime 2m sample-playlists
