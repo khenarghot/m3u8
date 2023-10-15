@@ -33,4 +33,4 @@ jobs:
       - name: Build
         run: go build -v
       - name: Fuzz
-        run: go test -fuzz FuzzDecode -fuzztime 2m sample-playlists
+        run: go test -fuzz FuzzDecode -fuzztime 2m
