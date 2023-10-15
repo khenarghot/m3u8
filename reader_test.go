@@ -1366,7 +1366,7 @@ func BenchmarkDecodeMediaPlaylist(b *testing.B) {
 
 func FuzzDecode(f *testing.F) {
 	f.Fuzz(func(t *testing.T, fuzz_data string) {
-		p, _, err = DecodeFrom(fuzz_data, true)
+		p, _, err := DecodeFrom(bytes.NewReader(fuzz_data), true)
 	})
 }
 
