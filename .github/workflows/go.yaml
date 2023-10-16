@@ -39,7 +39,7 @@ jobs:
         if: failure()
         with:
           name: DecodeFrom-artifacts
-          path: ./testdata/fuzz/FuzzDecode
+          path: ./testdata/fuzz/FuzzDecodeFrom
   fuzz_strict:
     needs: [build_and_check]
     name: Fuzz DecodeFrom with strict mode
@@ -62,5 +62,5 @@ jobs:
         if: failure()
         with:
           name: DecodeFromStrict-artifacts
-          path: ./testdata/fuzz/FuzzDecode
+          path: ./testdata/fuzz/FuzzDecodeStrict
 
