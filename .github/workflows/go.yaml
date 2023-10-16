@@ -17,9 +17,9 @@ jobs:
         run: go build -v
       - name: Check
         run: go test
-  fuzz:
+  fuzz_no_strict:
     needs: [build_and_check]
-    name: Fuzz
+    name: Fuzz DecodeFrom
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,4 +33,34 @@ jobs:
       - name: Build
         run: go build -v
       - name: Fuzz
-        run: go test -fuzz FuzzDecode -fuzztime 5m
+        run: go test -fuzz FuzzDecode -fuzztime 10m\
+      - name: Upload Crash (upload detected crash as artifacts)
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: DecodeFrom-artifacts
+          path: ./testdata/fuzz/FuzzDecode
+  fuzz_strict:
+    needs: [build_and_check]
+    name: Fuzz DecodeFrom with strict mode
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: Build
+        run: go build -v
+      - name: Fuzz
+        run: go test -fuzz FuzzDecodeStrict -fuzztime 10m
+      - name: Upload Crash (upload detected crash as artifacts)
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: DecodeFromStrict-artifacts
+          path: ./testdata/fuzz/FuzzDecode
+

@@ -1370,4 +1370,12 @@ func FuzzDecode(f *testing.F) {
 	})
 }
 
+func FuzzDecodeStrict(f *testing.F) {
+	f.Fuzz(func(t *testing.T, fuzz_data []byte) {
+		DecodeFrom(bytes.NewBuffer(fuzz_data), true)
+	})
+}
+
+
+
 
