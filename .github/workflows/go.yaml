@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: go build -v
       - name: Fuzz
-        run: go test -fuzz FuzzDecode -fuzztime 10m\
+        run: go test -fuzz FuzzDecodeFrom -fuzztime 10m
       - name: Upload Crash (upload detected crash as artifacts)
         uses: actions/upload-artifact@v1
         if: failure()
