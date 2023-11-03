@@ -4,7 +4,6 @@ jobs:
   build_and_check:
     runs-on: self-hosted
     name: Build and check (ubuntu latest)
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -22,7 +21,6 @@ jobs:
     runs-on: self-hosted
     needs: [build_and_check]
     name: Fuzz DecodeFrom
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -46,7 +44,6 @@ jobs:
     runs-on: self-hosted
     needs: [build_and_check]
     name: Fuzz DecodeFrom with strict mode
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
