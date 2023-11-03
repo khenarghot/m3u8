@@ -1,9 +1,8 @@
-runs-on: self-hosted
-
 name: Build and Check
 on: [push, pull_request]
 jobs:
   build_and_check:
+    runs-on: self-hosted
     name: Build and check (ubuntu latest)
     runs-on: ubuntu-latest
     steps:
@@ -20,6 +19,7 @@ jobs:
       - name: Check
         run: go test
   fuzz_no_strict:
+    runs-on: self-hosted
     needs: [build_and_check]
     name: Fuzz DecodeFrom
     runs-on: ubuntu-latest
@@ -43,6 +43,7 @@ jobs:
           name: DecodeFrom-artifacts
           path: ./testdata/fuzz/FuzzDecodeFrom
   fuzz_strict:
+    runs-on: self-hosted
     needs: [build_and_check]
     name: Fuzz DecodeFrom with strict mode
     runs-on: ubuntu-latest
