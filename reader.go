@@ -694,13 +694,19 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 			}
 		}
 		state.tagMap = true
-	case !state.tagProgramDateTime && strings.HasPrefix(line, "#EXT-X-PROGRAM-DATE-TIME:"):
+	case strings.HasPrefix(line, "#EXT-X-PROGRAM-DATE-TIME:"):
+		if strict && state.tagProgramDateTime {
+			return fmt.Errorf("Not applied tag #EXT-X-PROGRAM-DATE-TIME")
+		}
 		state.tagProgramDateTime = true
 		state.listType = MEDIA
 		if state.programDateTime, err = TimeParse(line[25:]); strict && err != nil {
 			return err
 		}
-	case !state.tagRange && strings.HasPrefix(line, "#EXT-X-BYTERANGE:"):
+	case strings.HasPrefix(line, "#EXT-X-BYTERANGE:"):
+		if strict && state.tagRange {
+			return fmt.Errorf("Tag EXT-X-BYTERANGE have no URI line for it")
+		}
 		state.tagRange = true
 		state.listType = MEDIA
 		state.offset = 0

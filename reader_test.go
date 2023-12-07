@@ -1343,6 +1343,68 @@ func TestMellformedPanicIssue2AltMAP(t *testing.T) {
 	}
 }
 
+func TestDublicateExtXProgramDateTime(t *testing.T) {
+	bad := bytes.NewBuffer([]byte(
+		`#EXTM3U
+#EXT-X-VERSION:4
+#EXT-X-TARGETDURATION:8
+#EXT-X-I-FRAMES-ONLY
+#EXT-X-MEDIA-SEQUENCE:2206397
+#EXT-X-PROGRAM-DATE-TIME:2023-11-27T19:15:30.789Z
+#EXT-X-PROGRAM-DATE-TIME:2023-11-27T19:15:31.789Z
+#EXTINF:1.000000,
+#EXT-X-BYTERANGE:50384@376
+output.ts`))
+	pl, _, err := DecodeFrom(bad, false)
+	if err != nil {
+		t.Fatalf("Failed to decode playlist: %s", err)
+	}
+	media := pl.(*MediaPlaylist)
+	rt := time.Time(time.Date(2023, time.November, 27, 19, 15, 31, 789000000, time.UTC))
+	if !rt.Equal(media.Segments[0].ProgramDateTime) {
+		t.Errorf("Mismatch time expected: %s,\nactual: %s",
+			rt, media.Segments[0].ProgramDateTime)
+
+	}
+	pl, _, err = DecodeFrom(bad, true)
+	if err == nil {
+		t.Errorf("No decode error on bad playlist in strict mode")
+	}
+
+}
+
+// TestDublicateExtXByterange
+func TestDublicateExtXByterange(t *testing.T) {
+	bad := bytes.NewBuffer([]byte(
+		`#EXTM3U
+#EXT-X-VERSION:4
+#EXT-X-TARGETDURATION:8
+#EXT-X-MEDIA-SEQUENCE:2206397
+#EXT-X-PROGRAM-DATE-TIME:2023-11-27T19:15:31.789Z
+#EXTINF:1.000000,
+#EXT-X-BYTERANGE:50008
+#EXT-X-BYTERANGE:50384@50008
+output.ts`))
+	pl, _, err := DecodeFrom(bad, false)
+	if err != nil {
+		t.Errorf("Unexpected error at playlist: %s", err)
+	}
+	sg := pl.(*MediaPlaylist).Segments[0]
+	if sg.Offset != 50008 {
+		t.Errorf("Wrong offset: %d instead %d", sg.Offset, 50008)
+	}
+	if sg.Limit != 50384 {
+		t.Errorf("Wrong limit: %d instead %d", sg.Limit, 50384)
+	}
+
+	bad = bytes.NewBuffer(bad.Bytes())
+	_, _, err = DecodeFrom(bad, true)
+	if err == nil {
+		t.Errorf("No decode error on bad playlist in strict mode")
+	}
+
+}
+
 /****************
  *  Benchmarks  *
  ****************/
