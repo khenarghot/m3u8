@@ -1437,3 +1437,22 @@ func BenchmarkDecodeMediaPlaylist(b *testing.B) {
 		}
 	}
 }
+
+
+/****************
+*  Fuzz targets	*
+*****************/
+
+
+func FuzzDecodeFrom(f *testing.F) {
+	f.Fuzz(func(t *testing.T, fuzz_data []byte) {
+		DecodeFrom(bytes.NewBuffer(fuzz_data), false)
+	})
+}
+
+func FuzzDecodeStrict(f *testing.F) {
+	f.Fuzz(func(t *testing.T, fuzz_data []byte) {
+		DecodeFrom(bytes.NewBuffer(fuzz_data), true)
+	})
+}
+
